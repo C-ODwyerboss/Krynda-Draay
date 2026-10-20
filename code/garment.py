@@ -286,27 +286,34 @@ def build_sleeve(loop_pts, path, rows=90, bell=0.16, bell_start=0.45, flare_pow=
 
 
 # --------------------------------------------------------------------------- hood (worn down, draped on the back)
-def build_hood_base(neck_back_pts, up=(0, 0, 1), out_dir=(0, 1, 0), length=0.34, rows=18, taper=0.55):
-    """A simple triangular hood panel attached along the back half of the neckline, pointing
-    up/back initially (like a hood thrown back) -- a cloth sim then lets it fall and drape
-    naturally over the shoulders/back, colliding with the body."""
+def build_hood_base(neck_back_pts, up=(0, 0, 1), out_dir=(0, 1, 0), length=0.52, rows=22, taper=0.15,
+                    widen=1.6):
+    """A big hood/cape panel attached along the back half of the neckline, standing up and
+    widening before arcing back and down over the shoulders -- a cloth sim then lets it settle
+    and drape down the back, colliding with the body, instead of collapsing to a point."""
     n = len(neck_back_pts)
     c = neck_back_pts.mean(axis=0)
     up = np.asarray(up, float); up /= np.linalg.norm(up)
     out_dir = np.asarray(out_dir, float); out_dir /= np.linalg.norm(out_dir)
+    side = np.cross(up, out_dir)
     verts = [neck_back_pts.copy()]
     for k in range(1, rows + 1):
         t = k / rows
-        shrink = 1.0 - taper * t
+        # widen for the first half (shoulders), then taper only a little toward the tip
+        grow = 1.0 + (widen - 1.0) * np.sin(min(t, 0.6) / 0.6 * np.pi / 2)
+        shrink = grow * (1.0 - taper * max(0.0, t - 0.6) / 0.4)
         ring = c + (neck_back_pts - c) * shrink
-        ring = ring + up[None, :] * (length * t) + out_dir[None, :] * (0.05 * t)
+        # path: rises, arcs backward/out, then curls down -- gives the sim a believable start pose
+        rise = np.sin(min(t, 0.5) / 0.5 * np.pi / 2)
+        fall = max(0.0, t - 0.5) / 0.5
+        ring = (ring + up[None, :] * (length * 0.55 * rise - length * 0.35 * fall)
+                + out_dir[None, :] * (length * 0.75 * t))
         verts.append(ring)
     V = np.array(verts)
     faces = []
     for k in range(rows):
         for i in range(n - 1):
             faces.append((k * n + i, k * n + i + 1, (k + 1) * n + i + 1, (k + 1) * n + i))
-    # close the tip into a point-ish cap by collapsing the last ring's faces (triangles)
     uv = np.zeros((rows + 1, n, 2))
     uu = np.linspace(0, 1, n)
     for k in range(rows + 1):

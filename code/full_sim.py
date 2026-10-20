@@ -5,9 +5,9 @@ from robe_common import *
 OUT = "/home/claude/work/out"
 ROWS_SK = int(os.environ.get("ROWS_SK", "80"))
 ROWS_SL = int(os.environ.get("ROWS_SL", "40"))
-ROWS_HD = int(os.environ.get("ROWS_HD", "16"))
+ROWS_HD = int(os.environ.get("ROWS_HD", "22"))
 FR = int(os.environ.get("FRAMES", "70"))
-WIND = float(os.environ.get("WIND", "25"))
+WIND = float(os.environ.get("WIND", "9"))
 
 reset_scene()
 V, rig, R, Pp = posed_body_points()
@@ -56,20 +56,20 @@ for side, loop, sign in (("L", arm_L, 1), ("R", arm_R, -1)):
     W = rig.head[f"wrist.{side}"].copy(); W[2] += garment.Z_OFF
     tip = W + (W - E) * 0.55
     path = np.array([lp.mean(axis=0), S, E, W, tip])
-    sv, sf, suv, order = garment.build_sleeve(lp, path, rows=ROWS_SL, bell=0.17, bell_start=0.42,
-                                              flare_pow=1.6, folds=6, fold_amp=0.05)
+    sv, sf, suv, order = garment.build_sleeve(lp, path, rows=ROWS_SL, bell=0.15, bell_start=0.46,
+                                              flare_pow=1.7, folds=6, fold_amp=0.025)
     sl = mh.mesh_from_arrays(f"Sleeve{side}", sv, sf, suv.reshape(-1, 2),
                               [[k * len(lp) + i, k * len(lp) + (i + 1) % len(lp), (k + 1) * len(lp) + (i + 1) % len(lp),
                                 (k + 1) * len(lp) + i] for k in range(ROWS_SL) for i in range(len(lp))])
     sleeve_objs.append(sl)
 
 # --- hood: panel from the back half of the neck loop
-back_mask = (npnts - nc) @ np.array([0, -1, 0]) > 0   # -Y is "back" in our camera convention? check sign later
+back_mask = (npnts - nc) @ np.array([0, 1, 0]) > 0    # +Y = back (person faces -Y toward the camera)
 if back_mask.sum() < 3:
     back_mask = ~back_mask
 back_pts = npnts[back_mask]
 # reorder back_pts along the loop (they're already a contiguous arc of the ordered loop ideally)
-hv, hf, huv, hn = garment.build_hood_base(back_pts, up=(0, 0, 1), out_dir=(0, -1, 0), length=0.30, rows=ROWS_HD)
+hv, hf, huv, hn = garment.build_hood_base(back_pts, up=(0, 0, 1), out_dir=(0, 1, 0), length=0.52, rows=ROWS_HD)
 hood = mh.mesh_from_arrays("Hood", hv, hf, huv.reshape(-1, 2), None)
 
 # --- pin groups & cloth
@@ -91,7 +91,7 @@ floor = make_floor()
 make_collider(floor, 0.004, 3)
 
 for ob, bend, sd in ((skirt, float(os.environ.get("BEND_SK", "6")), 0.008),
-                     (sleeve_objs[0], 4, 0.006), (sleeve_objs[1], 4, 0.006),
+                     (sleeve_objs[0], 10, 0.006), (sleeve_objs[1], 10, 0.006),
                      (hood, 8, 0.006)):
     cloth_setup(ob, frames=FR, quality=7, mass=0.28, tension=35, compression=35, shear=22,
                bending=bend, damping=8, dist=0.01, self_dist=sd, self_coll=True)
@@ -99,13 +99,15 @@ for ob, bend, sd in ((skirt, float(os.environ.get("BEND_SK", "6")), 0.008),
 bodice.hide_render = True  # keep as rigid base reference; skirt/sleeves/hood are simmed
 body.hide_render = True
 
-if WIND > 0:
-    add_wind(WIND, (1, 0.15, 0))
+wind_obj = add_wind(WIND, (1, 0.15, 0)) if WIND > 0 else None
 
 t = time.time()
 sc = bpy.context.scene
 sc.frame_start, sc.frame_end = 1, FR
+SETTLE = int(FR * 0.55)
 for f in range(1, FR + 1):
+    if wind_obj is not None and f == SETTLE:
+        wind_obj.field.strength = 0.0
     sc.frame_set(f)
     if f % 10 == 0 or f == FR:
         print(f"frame {f}/{FR} {time.time()-t:.0f}s")
