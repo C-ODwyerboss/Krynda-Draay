@@ -1,8 +1,9 @@
-# Krynda Draay — 3D model pipeline
+# Krynda-Draay
 
-A code-driven Blender pipeline building a realistic robed-mage character from a
-CC0 MakeHuman base mesh, with proper skeleton posing and a cloth-simulated robe
-(bodice, bell sleeves, pleated skirt, hood-down panel).
+Model for Krynda Draay — a code-driven Blender pipeline building a realistic
+robed-mage character from a CC0 MakeHuman base mesh, with proper skeleton
+posing and a cloth-simulated robe (bodice, bell sleeves, pleated skirt,
+hood-down panel).
 
 - `code/` — the pipeline scripts (run with `python3 <script>.py`, using the `bpy`
   pip module). See `PROGRESS.md` for what each file does and current status.
