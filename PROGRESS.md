@@ -45,6 +45,14 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   a strung pearl trim (small spheres) under the neckline trim; and a waist sash (flat ribbon
   built from the pinned, undistorted waist loop) with two hanging tapered gold tassels at
   front-centre.
+- **hair_test.py** — real strand-based hair on the head_test.py scene, using Blender's
+  Curves/hair-curves object (`bpy.data.hair_curves`) and a Principled Hair BSDF shader
+  (COLOR parametrization, warm golden blonde), replacing the v3 hand-built tube clumps.
+  Strand roots are sampled from a scalp region selected by height + outward-normal direction
+  (no bone/weight data needed for this), each grown as an 18-point curve that eases from a
+  small scalp-hugging root bump into a shared "windswept" flow direction with per-strand
+  length/curl/phase variation, gravity pull, and a part-line bias so the crown doesn't spike
+  straight up along the seam.
 - Earlier single-part scripts (head_test.py, pose_test.py, skirt_test.py / skirt_sim.py /
   skirt_dbg.py / viz_skirt.py) still work and are kept for isolated testing of one part.
 
@@ -65,11 +73,17 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   the legs without flying open, sleeves bell out without bunching into a ball, and the hood
   is a visible drape at the back of the neck/shoulders rather than collapsing to nothing.
   Kept as the untextured structural reference.
-- `full_sim_mat_sheet.png` (front/three/back) / `full_sim_materials.blend` — **current
-  best**: the same sim result with the real materials pass applied (deep purple velvet,
-  gold hem/cuff/hood/neckline trim, pearl trim, waist sash + tassels). This is the first
-  render that reads as "the character" rather than clay -- still missing hair and a combined
+- `full_sim_mat_sheet.png` (front/three/back) / `full_sim_materials.blend` — the dressed,
+  cloth-simulated body with the real materials pass (deep purple velvet, gold hem/cuff/
+  hood/neckline trim, pearl trim, waist sash + tassels). Still missing hair and a combined
   head+body shot (the head and body/robe are still built and rendered by separate scripts).
+- `hair_sheet.png` (front/three) / `hair_test.blend` — **current best for the head**: the
+  sharpened-morph head with real strand-based blonde hair blown windswept to one side,
+  shoulder-length and past. Reads well mid-strand and at the tips; the roots right at the
+  crown/hairline are still a bit spiky/comb-like rather than lying flat before catching the
+  wind -- worth one more pass (see gap #5 below) if it still reads that way once hair is
+  combined with the dressed body at a normal viewing distance (it's more noticeable in this
+  tight head-only crop than it likely will be on the full figure).
 
 ## Known gaps / next steps (in order)
 1. ~~Materials~~ — done (see `materials_full.py` above): velvet/satin purple robe shader
@@ -83,16 +97,18 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
    stand-in, not MakeHuman's own asset — that asset wasn't present in this sparse clone) are
    still outstanding; skin shader now has a first bump/roughness-variation pass (see above)
    but could use an actual pore/wrinkle texture map rather than pure procedural noise.
-4. Hair: strand-based (Blender hair curves) rooted on the scalp, not tube clumps like v3 —
-   now the next highest-impact gap, since the head is currently bald in every render.
+4. ~~Hair~~ — done (see `hair_test.py` above): real strand-based Curves hair with a
+   Principled Hair BSDF, windswept and blonde. The root/hairline area could use one more
+   pass to lie flatter before sweeping sideways (currently a bit spiky/comb-like close up).
 5. Hood fine-tuning: it reads as a drape now but is still not unambiguously hood-shaped from
    the back even with its own darker material and gold edge trim — worth another geometry
    pass (larger/more forward-draping) rather than a materials one.
-6. **Final assembly**: the head (head_test.py) and the dressed body (materials_full.py) are
-   still two separate scripts/renders using two different posed bodies -- next integration
-   step is combining them into one script so the finished head sits on the dressed body in a
-   single render, then doing the lighting pass and the originally-requested per-part renders
-   (robe alone, head alone, hands alone, full figure) plus a combined beauty render.
+6. **Final assembly** — now the single highest-impact remaining step: the head+hair
+   (head_test.py / hair_test.py) and the dressed body (materials_full.py) are still three
+   separate scripts/renders using separately-posed bodies. Next is combining them into one
+   script so the finished head+hair sits on the dressed, cloth-simmed body in a single
+   render, then a proper lighting pass and the originally-requested per-part renders (robe
+   alone, head alone, hands alone, full figure) plus a combined beauty render.
 
 ## How to resume
 All code is self-contained under `code/` and imports MakeHuman data from
