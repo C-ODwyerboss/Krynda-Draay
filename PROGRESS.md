@@ -12,8 +12,10 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   (face/body morphs) by index-additive deltas. Also fits MakeHuman's high-poly eye mesh via
   its .mhclo proxy format.
 - **shape.py** — the character's specific face/body morph recipe (gaunt face, high
-  cheekbones, hooded eyes, aquiline nose, thin downturned mouth). Still needs more passes to
-  match the reference's striking, sharp features.
+  cheekbones, hooded eyes, aquiline nose, thin downturned mouth). Pushed further today: more
+  angular skull, stronger brow, deeper-set narrower eyes, more pronounced nose hump, hollower
+  cheeks, more prominent jaw/chin, longer neck, age bumped 40→46 — reads noticeably sharper
+  and more mature now, less "generic/youthful" (see renders below).
 - **pose.py** — numpy linear-blend-skinning using MakeHuman's default skeleton (163 bones).
   FK posing with an `aim_chain` helper and a 2-bone IK solver for arms.
 - **posing.py** — the actual pose: arms raised, one hand gathering the robe at the chest,
@@ -38,8 +40,12 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   skirt_dbg.py / viz_skirt.py) still work and are kept for isolated testing of one part.
 
 ## Renders (renders/)
-- `head_front.png`, `head_three.png` — bare head/shoulders with the shape.py morph recipe
-  and fitted MakeHuman eyes.
+- `head_front.png`, `head_three.png` — bare head/shoulders with the sharpened shape.py morph
+  recipe, fitted MakeHuman eyes (now tinted instead of flat grey), a layered-noise skin bump
+  (broad undulation + fine pore scale, plus roughness variation) for a less "clay" look, and
+  procedural eyebrow ribbons (MakeHuman's own eyebrow asset isn't present in this sparse
+  clone, so these are hand-built from eye-socket geometry as a stand-in until real
+  strand-based brows/hair are added).
 - `pose_sheet.png` + views — full body in the final arm/head pose (nude, rigging reference).
 - `skirt0.png` — first (non-simulated) skirt attempt, too clean/conical.
 - `skirt_sim_sheet.png` / `skirt_sim.blend` — skirt-only cloth sim, stable after fixing an
@@ -56,11 +62,13 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
    deep purple), gold metallic trim/embroidery meshes conformed to the simulated cloth
    surface, pearl/bead trim, sash with tassels — this is the single highest-impact remaining
    step since everything is currently flat gray/lavender clay.
-2. Push `shape.py` morphs further for a closer facial match to the reference (sharper
-   cheekbones/jaw, more hooded/narrow eyes, visible age lines) — current result is still a
-   bit generic/youthful.
-3. Add eyebrows/eyelashes (MakeHuman has CC0 assets for both, not yet wired in) and a proper
-   skin shader pass (pores/bump, SSS tuned).
+2. ~~Push `shape.py` morphs further~~ — done (sharper skull/brow/cheek/jaw, deeper eyes,
+   stronger nose, age 46). Could still go further if later full-body renders show it reading
+   soft again at a distance, but it's a clear step up from the previous pass.
+3. Eyelashes and a real eyebrow asset (current eyebrows are a hand-built procedural
+   stand-in, not MakeHuman's own asset — that asset wasn't present in this sparse clone) are
+   still outstanding; skin shader now has a first bump/roughness-variation pass (see above)
+   but could use an actual pore/wrinkle texture map rather than pure procedural noise.
 4. Hair: strand-based (Blender hair curves) rooted on the scalp, not tube clumps like v3.
 5. Hood fine-tuning: it reads as a drape now but could be larger/more voluminous to read
    unambiguously as a hood rather than a ruffled collar at a glance — worth one more pass
