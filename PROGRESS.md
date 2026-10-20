@@ -35,7 +35,16 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   instead of staying wind-whipped).
 - **full_sim.py** — builds bodice + sleeves + skirt + hood together from one posed body and
   cloth-simulates all four pieces at once, colliding with the body and floor and each other.
-- **viz_full.py** — loads a saved sim result and renders front/three-quarter/back views.
+- **viz_full.py** — loads a saved sim result and renders front/three-quarter/back views with
+  flat clay materials (kept as a quick structural-check script).
+- **materials_full.py** — the real materials pass on the saved sim result: a velvet/satin
+  Principled shader (sheen + layered noise bump for weave/fold variation) in deep purple for
+  the bodice/sleeves/skirt and a darker shade for the hood; gold metallic trim built as
+  bevelled curves directly along the simulated cloth's own boundary loops (hem, both cuffs,
+  hood free edge, neckline) so it conforms to the actual drape instead of being hand-placed;
+  a strung pearl trim (small spheres) under the neckline trim; and a waist sash (flat ribbon
+  built from the pinned, undistorted waist loop) with two hanging tapered gold tassels at
+  front-centre.
 - Earlier single-part scripts (head_test.py, pose_test.py, skirt_test.py / skirt_sim.py /
   skirt_dbg.py / viz_skirt.py) still work and are kept for isolated testing of one part.
 
@@ -50,18 +59,23 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
 - `skirt0.png` — first (non-simulated) skirt attempt, too clean/conical.
 - `skirt_sim_sheet.png` / `skirt_sim.blend` — skirt-only cloth sim, stable after fixing an
   earlier self-collision explosion.
-- `full_sim_sheet.png` / `full_sim.blend` — **current best**: bodice + bell sleeves +
-  pleated skirt + hood, all cloth-simulated together on the posed body with wind that settles
-  out before the end of the sim. All four pieces now drape plausibly: skirt falls naturally
-  around the legs without flying open, sleeves bell out without bunching into a ball, and the
-  hood is a visible drape at the back of the neck/shoulders rather than collapsing to nothing.
-  Still untextured gray/lavender clay — no robe color, gold trim, or face/hair detail yet.
+- `full_sim_sheet.png` / `full_sim.blend` — the raw cloth-sim result: bodice + bell sleeves +
+  pleated skirt + hood, all simulated together on the posed body with wind that settles out
+  before the end of the sim. All four pieces drape plausibly: skirt falls naturally around
+  the legs without flying open, sleeves bell out without bunching into a ball, and the hood
+  is a visible drape at the back of the neck/shoulders rather than collapsing to nothing.
+  Kept as the untextured structural reference.
+- `full_sim_mat_sheet.png` (front/three/back) / `full_sim_materials.blend` — **current
+  best**: the same sim result with the real materials pass applied (deep purple velvet,
+  gold hem/cuff/hood/neckline trim, pearl trim, waist sash + tassels). This is the first
+  render that reads as "the character" rather than clay -- still missing hair and a combined
+  head+body shot (the head and body/robe are still built and rendered by separate scripts).
 
 ## Known gaps / next steps (in order)
-1. **Materials**: velvet/satin purple robe shader with sheen (closer to the comic reference's
-   deep purple), gold metallic trim/embroidery meshes conformed to the simulated cloth
-   surface, pearl/bead trim, sash with tassels — this is the single highest-impact remaining
-   step since everything is currently flat gray/lavender clay.
+1. ~~Materials~~ — done (see `materials_full.py` above): velvet/satin purple robe shader
+   with sheen, gold trim conformed to the simulated cloth boundaries, pearl trim, sash with
+   tassels. Embroidery is only implied by the gold trim + weave-noise bump, not an actual
+   embroidered pattern texture — a further pass could add that if it's worth the extra detail.
 2. ~~Push `shape.py` morphs further~~ — done (sharper skull/brow/cheek/jaw, deeper eyes,
    stronger nose, age 46). Could still go further if later full-body renders show it reading
    soft again at a distance, but it's a clear step up from the previous pass.
@@ -69,12 +83,16 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
    stand-in, not MakeHuman's own asset — that asset wasn't present in this sparse clone) are
    still outstanding; skin shader now has a first bump/roughness-variation pass (see above)
    but could use an actual pore/wrinkle texture map rather than pure procedural noise.
-4. Hair: strand-based (Blender hair curves) rooted on the scalp, not tube clumps like v3.
-5. Hood fine-tuning: it reads as a drape now but could be larger/more voluminous to read
-   unambiguously as a hood rather than a ruffled collar at a glance — worth one more pass
-   once materials make it color-distinct from the bodice.
-6. Final assembly + lighting pass; render per-part (robe alone, head alone, hands alone,
-   full figure) per the original request, then a combined beauty render.
+4. Hair: strand-based (Blender hair curves) rooted on the scalp, not tube clumps like v3 —
+   now the next highest-impact gap, since the head is currently bald in every render.
+5. Hood fine-tuning: it reads as a drape now but is still not unambiguously hood-shaped from
+   the back even with its own darker material and gold edge trim — worth another geometry
+   pass (larger/more forward-draping) rather than a materials one.
+6. **Final assembly**: the head (head_test.py) and the dressed body (materials_full.py) are
+   still two separate scripts/renders using two different posed bodies -- next integration
+   step is combining them into one script so the finished head sits on the dressed body in a
+   single render, then doing the lighting pass and the originally-requested per-part renders
+   (robe alone, head alone, hands alone, full figure) plus a combined beauty render.
 
 ## How to resume
 All code is self-contained under `code/` and imports MakeHuman data from
