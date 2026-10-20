@@ -53,6 +53,14 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   small scalp-hugging root bump into a shared "windswept" flow direction with per-strand
   length/curl/phase variation, gravity pull, and a part-line bias so the crown doesn't spike
   straight up along the seam.
+- **final_assembly.py** — combines everything above into one scene and one render: the
+  dressed/materials-passed body (loaded from full_sim.npz, as in materials_full.py) plus the
+  sharpened head, fitted eyes, brow ribbons and windswept hair (built in the same rest-pose
+  space head_test.py/hair_test.py use). The head assets are carried onto the posed body by
+  the skeleton's own "head" bone world transform (`rig.M["head"]`, available after
+  `posed_body_points()` calls `rig.pose()`) rather than re-deriving a posed head from
+  scratch -- i.e. the finished head is rigidly attached to the body's head bone. This is the
+  first script that renders the whole character together.
 - Earlier single-part scripts (head_test.py, pose_test.py, skirt_test.py / skirt_sim.py /
   skirt_dbg.py / viz_skirt.py) still work and are kept for isolated testing of one part.
 
@@ -77,13 +85,18 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   cloth-simulated body with the real materials pass (deep purple velvet, gold hem/cuff/
   hood/neckline trim, pearl trim, waist sash + tassels). Still missing hair and a combined
   head+body shot (the head and body/robe are still built and rendered by separate scripts).
-- `hair_sheet.png` (front/three) / `hair_test.blend` — **current best for the head**: the
-  sharpened-morph head with real strand-based blonde hair blown windswept to one side,
-  shoulder-length and past. Reads well mid-strand and at the tips; the roots right at the
-  crown/hairline are still a bit spiky/comb-like rather than lying flat before catching the
-  wind -- worth one more pass (see gap #5 below) if it still reads that way once hair is
-  combined with the dressed body at a normal viewing distance (it's more noticeable in this
-  tight head-only crop than it likely will be on the full figure).
+- `hair_sheet.png` (front/three) / `hair_test.blend` — the sharpened-morph head with real
+  strand-based blonde hair blown windswept to one side, shoulder-length and past, rendered on
+  its own (close crop, isolated from the body).
+- `final_sheet.png` (front/three/back) / `final_assembly.blend` — **current best overall**:
+  the whole character in one render for the first time -- dressed cloth-simmed body with the
+  velvet/gold/pearl materials pass, topped by the sharpened head, eyes, brows and windswept
+  hair, all correctly aligned on the posed figure via the head-bone attachment described
+  above. At full-figure distance the hair roots read fine (the spikiness noted above is only
+  really visible in the tight head-only crop). Two things stand out as the next polish pass:
+  the bodice/sleeve gap leaves more bare chest/shoulder than the reference's more modest
+  neckline, and the hair color still trends a little pale/flaxen rather than a rich gold --
+  both are materials/geometry tweaks, not structural problems.
 
 ## Known gaps / next steps (in order)
 1. ~~Materials~~ — done (see `materials_full.py` above): velvet/satin purple robe shader
@@ -103,12 +116,19 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
 5. Hood fine-tuning: it reads as a drape now but is still not unambiguously hood-shaped from
    the back even with its own darker material and gold edge trim — worth another geometry
    pass (larger/more forward-draping) rather than a materials one.
-6. **Final assembly** — now the single highest-impact remaining step: the head+hair
-   (head_test.py / hair_test.py) and the dressed body (materials_full.py) are still three
-   separate scripts/renders using separately-posed bodies. Next is combining them into one
-   script so the finished head+hair sits on the dressed, cloth-simmed body in a single
-   render, then a proper lighting pass and the originally-requested per-part renders (robe
-   alone, head alone, hands alone, full figure) plus a combined beauty render.
+6. ~~Final assembly~~ — done (see `final_assembly.py` above): the whole character now
+   renders in one scene, head-bone-attached to the dressed, cloth-simmed body.
+7. Remaining polish, roughly in order of impact:
+   - Bodice/sleeve neckline is gappier than the reference's more modest/covered look (more
+     bare chest and shoulder showing than intended) — a `garment.py` geometry tweak.
+   - Hair color still trends pale/flaxen rather than a rich warm gold at full-figure viewing
+     distance — a `materials_full.py`/`final_assembly.py` Hair-BSDF color/lighting tweak.
+   - The originally-requested standalone per-part renders (robe alone, head alone, hands
+     alone) already exist individually (`materials_full.py`'s and `hair_test.py`'s renders);
+     a hands-alone render is still outstanding.
+   - A dedicated final lighting/composition pass on `final_assembly.py`'s render (current
+     lighting was carried over from the materials-only pass, not re-tuned for the full
+     combined figure).
 
 ## How to resume
 All code is self-contained under `code/` and imports MakeHuman data from
