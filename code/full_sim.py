@@ -17,8 +17,10 @@ body = mh.make_mesh("Body", Pp, bl=True)
 Pp0 = Pp.copy()
 Pp0[:, 2] -= garment.Z_OFF
 
-# torso-only bodice (sleeve_cut tiny so sleeves are excluded -> built separately as bells)
-base_bm, used, remap = garment.build_base(rig, Pp0, sleeve_cut=0.06)
+# torso bodice, now extended further over the shoulder/upper-arm (sleeve_cut raised from 0.06
+# to 0.22) so it meets the separately-built bell sleeve instead of leaving a bare-shoulder gap
+SLEEVE_CUT = float(os.environ.get("SLEEVE_CUT", "0.22"))
+base_bm, used, remap = garment.build_base(rig, Pp0, sleeve_cut=SLEEVE_CUT)
 for v in base_bm.verts:
     v.co.z += garment.Z_OFF
 garment.subdivide_bm(base_bm, 1)
@@ -55,7 +57,10 @@ for side, loop, sign in (("L", arm_L, 1), ("R", arm_R, -1)):
     E = rig.head[f"lowerarm01.{side}"].copy(); E[2] += garment.Z_OFF
     W = rig.head[f"wrist.{side}"].copy(); W[2] += garment.Z_OFF
     tip = W + (W - E) * 0.55
-    path = np.array([lp.mean(axis=0), S, E, W, tip])
+    # the armhole ring (lp) now sits SLEEVE_CUT of the way down the upper arm (not at the
+    # shoulder joint S any more), so starting the path at lp.mean then back at S would fold the
+    # path backward on itself -- skip S and go straight from the armhole to the elbow
+    path = np.array([lp.mean(axis=0), E, W, tip])
     sv, sf, suv, order = garment.build_sleeve(lp, path, rows=ROWS_SL, bell=0.15, bell_start=0.46,
                                               flare_pow=1.7, folds=6, fold_amp=0.025)
     sl = mh.mesh_from_arrays(f"Sleeve{side}", sv, sf, suv.reshape(-1, 2),
@@ -121,7 +126,7 @@ np.savez(f"{OUT}/full_sim.npz", skirt=Psk, skirt_faces=np.array(faces, dtype=obj
 import pickle
 with open(f"{OUT}/full_sim_topo.pkl", "wb") as fh:
     pickle.dump(dict(skirt_faces=faces, sleeve_faces=sf, sleeve_n=len(arm_L), hood_faces=hf, hood_n=hn,
-                     bodice_faces=[tuple(t[0] for t in fc) for fc in garment.faces_for(garment.select_region(rig, 0.06))],
+                     bodice_faces=[tuple(t[0] for t in fc) for fc in garment.faces_for(garment.select_region(rig, SLEEVE_CUT))],
                      bodice_used=used), fh)
 bpy.ops.wm.save_as_mainfile(filepath=f"{OUT}/full_sim.blend")
 print("DONE")

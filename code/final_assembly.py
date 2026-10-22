@@ -312,7 +312,9 @@ for off in (-0.018, 0.018):
     t_ob.data.materials.append(mat_t)
     smooth_obj(t_ob)
 
-bodice.hide_render = True  # rigid reference only
+# (bodice is the torso/shoulder-covering cloth piece and IS rendered, same as in
+# materials_full.py -- it must stay visible here, unlike in full_sim.py where that flag is a
+# harmless leftover from the sim pass, which never renders at all)
 
 # ------------------------------------------------------------------ head: eyes, brows, hair
 # all built in the SAME rest-pose Blender space head_test.py/hair_test.py use, then carried

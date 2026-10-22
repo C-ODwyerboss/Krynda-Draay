@@ -21,13 +21,17 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
 - **posing.py** — the actual pose: arms raised, one hand gathering the robe at the chest,
   head turned/tilted, with per-finger curl based on rest-pose hand geometry.
 - **garment.py** — builds the garment directly from the posed skin surface:
-  - `build_base` — bodice torso panel, selected by bone-weight region, offset along normals
+  - `build_base` — bodice torso panel, selected by bone-weight region, offset along normals.
+    `sleeve_cut` (how far down the upper arm the bodice extends before handing off to the
+    separate bell sleeve) raised from 0.06 to 0.22 so the bodice's own shoulder cap actually
+    covers the shoulder/deltoid instead of stopping right at the joint and leaving a bare
+    gap before the puffy sleeve picked up further down the arm (see full_sim.py below).
   - `build_skirt` — flared pleated skirt extruded from the waist boundary loop, with a
     body-clearance pass so it doesn't clip the legs
   - `build_sleeve` — bell-flared sleeve tube following the arm via parallel-transport frames
   - `build_hood_base` — a wide hood/cape panel attached to the back half of the neckline,
     standing up and arcing back/down so a cloth sim settles it into a believable
-    worn-down-the-back drape (fixed today: was originally shrinking to an invisible point
+    worn-down-the-back drape (fixed earlier: was originally shrinking to an invisible point
     and attached to the front half of the neck by a sign error — now attaches to the back
     half and keeps its width as it falls)
 - **robe_common.py** — Cycles cloth-sim helpers (pin groups, self-collision, wind field with
@@ -35,6 +39,11 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   instead of staying wind-whipped).
 - **full_sim.py** — builds bodice + sleeves + skirt + hood together from one posed body and
   cloth-simulates all four pieces at once, colliding with the body and floor and each other.
+  `SLEEVE_CUT` env var (default 0.22, was hardcoded 0.06) controls the bodice/sleeve handoff
+  point above; the sleeve's own path construction was also fixed to drop the now-redundant
+  shoulder-joint waypoint (with the armhole ring sitting further down the arm, routing the
+  path back through the joint first folded the sleeve's parallel-transport frames on
+  themselves right at the root).
 - **viz_full.py** — loads a saved sim result and renders front/three-quarter/back views with
   flat clay materials (kept as a quick structural-check script).
 - **materials_full.py** — the real materials pass on the saved sim result: a velvet/satin
@@ -89,14 +98,11 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
   strand-based blonde hair blown windswept to one side, shoulder-length and past, rendered on
   its own (close crop, isolated from the body).
 - `final_sheet.png` (front/three/back) / `final_assembly.blend` — **current best overall**:
-  the whole character in one render for the first time -- dressed cloth-simmed body with the
-  velvet/gold/pearl materials pass, topped by the sharpened head, eyes, brows and windswept
-  hair, all correctly aligned on the posed figure via the head-bone attachment described
-  above. At full-figure distance the hair roots read fine (the spikiness noted above is only
-  really visible in the tight head-only crop). Two things stand out as the next polish pass:
-  the bodice/sleeve gap leaves more bare chest/shoulder than the reference's more modest
-  neckline, and the hair color still trends a little pale/flaxen rather than a rich gold --
-  both are materials/geometry tweaks, not structural problems.
+  the whole character in one render, dressed cloth-simmed body (now with the fixed, properly
+  shoulder-covering bodice) with the velvet/gold/pearl materials pass, topped by the
+  sharpened head, eyes, brows and windswept hair, all correctly aligned on the posed figure
+  via the head-bone attachment. At full-figure distance the hair roots read fine (the
+  spikiness noted earlier is only really visible in the tight head-only crop).
 
 ## Known gaps / next steps (in order)
 1. ~~Materials~~ — done (see `materials_full.py` above): velvet/satin purple robe shader
@@ -118,9 +124,14 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
    pass (larger/more forward-draping) rather than a materials one.
 6. ~~Final assembly~~ — done (see `final_assembly.py` above): the whole character now
    renders in one scene, head-bone-attached to the dressed, cloth-simmed body.
-7. Remaining polish, roughly in order of impact:
-   - Bodice/sleeve neckline is gappier than the reference's more modest/covered look (more
-     bare chest and shoulder showing than intended) — a `garment.py` geometry tweak.
+7. ~~Bodice/sleeve neckline gap~~ — done: raised `sleeve_cut` 0.06→0.22 in `full_sim.py` (see
+   `garment.py`/`full_sim.py` above) so the bodice's own shoulder cap meets the bell sleeve
+   instead of leaving bare shoulder/chest between them; re-ran the full cloth sim and both
+   `materials_full.py` and `final_assembly.py` to pick it up. Caught and fixed a second bug
+   in the same pass: `final_assembly.py` had copied a leftover `bodice.hide_render = True`
+   from `full_sim.py` (harmless there, since that script never renders) which was hiding the
+   torso-covering piece entirely in the combined render -- removed.
+8. Remaining polish, roughly in order of impact:
    - Hair color still trends pale/flaxen rather than a rich warm gold at full-figure viewing
      distance — a `materials_full.py`/`final_assembly.py` Hair-BSDF color/lighting tweak.
    - The originally-requested standalone per-part renders (robe alone, head alone, hands
@@ -129,6 +140,7 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
    - A dedicated final lighting/composition pass on `final_assembly.py`'s render (current
      lighting was carried over from the materials-only pass, not re-tuned for the full
      combined figure).
+   - Hood fine-tuning (see gap 5 above) is still open.
 
 ## How to resume
 All code is self-contained under `code/` and imports MakeHuman data from
