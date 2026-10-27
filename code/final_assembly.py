@@ -453,12 +453,15 @@ hmat, hnt, hout = new_material("Hair")
 hb = N(hnt, 'ShaderNodeBsdfHairPrincipled', (0, 0))
 L(hnt, hb.outputs[0], hout.inputs[0])
 hb.parametrization = 'COLOR'
-setin(hb, "Color", (0.52, 0.32, 0.09, 1))
+setin(hb, "Color", (0.40, 0.19, 0.035, 1))  # darker/more saturated amber-gold -- the thin,
+# densely-overlapping strands scatter a lot of light and read much paler than this base color
 setin(hb, "Roughness", 0.3)
 setin(hb, "Radial Roughness", 0.4)
 setin(hb, "Random Roughness", 0.2)
-setin(hb, "Random Color", 0.12)
+setin(hb, "Random Color", 0.1)
 setin(hb, "IOR", 1.55)
+if "Transmission" in hb.inputs:
+    setin(hb, "Transmission", 0.55)  # less backlit glow-through, less washed-out overall
 hc.materials.append(hmat)
 
 # ------------------------------------------------------------------ lighting + cameras
@@ -467,7 +470,7 @@ set_world((0.12, 0.12, 0.14), 0.5)
 setup_cycles(SAMPLES, 640, 960, exposure=-0.45)
 add_area("Key", (1.5, -3, 3), (0, 0, 1.1), 150, 2.5)
 add_area("Fill", (-2.5, -2, 1.5), (0, 0, 1.1), 50, 3)
-add_area("Rim", (0, 3, 2.6), (0, 0, 1.4), 70, 2.0)
+add_area("Rim", (0, 3, 2.6), (0, 0, 1.4), 35, 2.0)  # halved -- was blowing the hair out white
 cams = {"front": add_camera("F", (0, -4.2, 1.1), (0, 0, 1.1), lens=50),
         "three": add_camera("T", (2.8, -3.4, 1.4), (0, 0, 1.1), lens=50),
         "back": add_camera("B", (0, 4.2, 1.1), (0, 0, 1.1), lens=50)}

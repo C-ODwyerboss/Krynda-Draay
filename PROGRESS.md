@@ -131,9 +131,12 @@ dressed in a cloth-simulated robe (hood worn down, not up), rendered in Cycles.
    in the same pass: `final_assembly.py` had copied a leftover `bodice.hide_render = True`
    from `full_sim.py` (harmless there, since that script never renders) which was hiding the
    torso-covering piece entirely in the combined render -- removed.
-8. Remaining polish, roughly in order of impact:
-   - Hair color still trends pale/flaxen rather than a rich warm gold at full-figure viewing
-     distance — a `materials_full.py`/`final_assembly.py` Hair-BSDF color/lighting tweak.
+8. ~~Hair color~~ — done: darkened/resaturated the Principled Hair BSDF `Color`
+   (0.52,0.32,0.09 → 0.40,0.19,0.035), added a `Transmission` weight reduction (1.0 → 0.55)
+   to cut down the backlit glow-through that was washing the mass of overlapping strands out
+   toward white, and halved the Rim light (70 → 35) that was contributing to the blowout.
+   Reads as a proper warm golden blonde at full-figure distance now, in `final_assembly.py`.
+9. Remaining polish, roughly in order of impact:
    - The originally-requested standalone per-part renders (robe alone, head alone, hands
      alone) already exist individually (`materials_full.py`'s and `hair_test.py`'s renders);
      a hands-alone render is still outstanding.
